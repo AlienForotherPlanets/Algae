@@ -1,6 +1,6 @@
 # interprets program args correctly
 import sys
-import helpers.IO as io
+import helpers.io as io
 
 
 def getConfigFile():

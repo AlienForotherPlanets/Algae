@@ -10,7 +10,7 @@
 # - groupPairs (bool) - Cluster together connected components of pairs
 
 import helpers.common as common
-import helpers.IO as IO
+import helpers.io as IO
 from multiprocessing import Process
 from guassian import getMean, getDeviation
 import math

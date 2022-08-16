@@ -1,6 +1,6 @@
 # valdiates the corpus and provides helper functions to it
 
-import helpers.IO as io
+import helpers.io as io
 import os
 import csv
 import shutil

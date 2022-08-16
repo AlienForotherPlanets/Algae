@@ -1,6 +1,6 @@
 # handles management of the progress.json file
 
-import helpers.IO as io
+import helpers.io as io
 import json
 
 

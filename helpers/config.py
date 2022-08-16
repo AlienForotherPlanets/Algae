@@ -1,4 +1,4 @@
-import helpers.IO as io
+import helpers.io as io
 
 
 class Assignment:

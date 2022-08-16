@@ -4,7 +4,7 @@ import sys
 import tokenizer
 import os
 import re
-import helpers.IO as IO
+import helpers.io as IO
 
 # just tokenizes the file
 

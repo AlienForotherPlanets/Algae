@@ -6,7 +6,7 @@
 # - singleFile (bool - optional - defaults to false): Results contained in a single file.
 # - inputFile (string - optional) - input file to use in singleFile is true
 
-import helpers.IO as IO
+import helpers.io as IO
 import helpers.common as common
 
 
