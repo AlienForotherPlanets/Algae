@@ -1,6 +1,6 @@
 import helpers.common as common
 from multiprocessing import Process
-import helpers.IO as IO
+import helpers.io as IO
 import math
 
 statTypes = ["numLines", "numWhitespace", "numComments", "avgIdentLength",

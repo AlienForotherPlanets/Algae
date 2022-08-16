@@ -1,7 +1,7 @@
 # Converts C/C++ files flatly into their tokens
 import tokenizer.main as tokenizer
 import helpers.common as common
-import helpers.IO as IO
+import helpers.io as IO
 from multiprocessing import Process
 
 

@@ -8,7 +8,7 @@
 # - resultsSuffix (string) - Suffix of file that will be written to postprocessor
 
 import helpers.common as common
-import helpers.IO as IO
+import helpers.io as IO
 import os
 from multiprocessing import Process
 
