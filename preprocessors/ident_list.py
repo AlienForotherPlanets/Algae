@@ -3,54 +3,59 @@ import helpers.common as common
 from multiprocessing import Process
 import re
 
+
 def tokenize(path):
-	t = Tokenizer(path)
-	tokens = t.raw_tokenize()
+    t = Tokenizer(path)
+    tokens = t.raw_tokenize()
 
-	idents = []
-	for token in tokens:
-		if token.kind.name == "IDENTIFIER":
-			name = token.spelling.lower()
-			name = re.sub("_", "", name)
-			idents.append(name)
+    idents = []
+    for token in tokens:
+        if token.kind.name == "IDENTIFIER":
+            name = token.spelling.lower()
+            name = re.sub("_", "", name)
+            idents.append(name)
 
-	return "\n".join(idents)
+    return "\n".join(idents)
+
 
 def runFile(students, assign, helpers):
-	helpers.printf("Processing assignment '{}' in parellel...\n".format(assign.name))
+    helpers.printf(
+        "Processing assignment '{}' in parellel...\n".format(assign.name))
 
-	# for each student
-	for student in students:
-		# for each specificied file
-		files = assign.args["files"]
-		for filename in files:
-			# get the path
-			path = helpers.getAssignmentPath(student, assign.name, filename)
+    # for each student
+    for student in students:
+        # for each specificied file
+        files = assign.args["files"]
+        for filename in files:
+            # get the path
+            path = helpers.getAssignmentPath(student, assign.name, filename)
 
-			if path != None:
-				# get the identifiers
-				text = tokenize(path)
+            if path != None:
+                # get the identifiers
+                text = tokenize(path)
 
-				# write to a file
-				safeFilename = common.makeFilenameSafe(filename) + "identifiers.txt"
-				helpers.writeToPreprocessed(text, student, assign.name, safeFilename)
+                # write to a file
+                safeFilename = common.makeFilenameSafe(
+                    filename) + "identifiers.txt"
+                helpers.writeToPreprocessed(
+                    text, student, assign.name, safeFilename)
 
-	# all done
-	helpers.printf("Finished '{}'!\n".format(assign.name))
+    # all done
+    helpers.printf("Finished '{}'!\n".format(assign.name))
 
 
 def run(students, assignments, args, helpers):
-	threads = []
+    threads = []
 
-	# for each assignment
-	for assign in assignments:
-		t = Process(target=runFile, args=(students, assign, helpers))
-		threads.append(t)
-		t.start()
+    # for each assignment
+    for assign in assignments:
+        t = Process(target=runFile, args=(students, assign, helpers))
+        threads.append(t)
+        t.start()
 
-	# wait for all to finish
-	for t in threads:
-		t.join()
+    # wait for all to finish
+    for t in threads:
+        t.join()
 
-	# all done!
-	return True
+    # all done!
+    return True

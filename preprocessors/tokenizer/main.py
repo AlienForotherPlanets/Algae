@@ -4,9 +4,11 @@ import sys
 import tokenizer
 import os
 import re
-import helpers.io as io
+import helpers.IO as IO
 
 # just tokenizes the file
+
+
 def simple(filepath):
     tok = tokenizer.Tokenizer(filepath)
     results = tok.full_tokenize()
@@ -16,12 +18,14 @@ def simple(filepath):
 # tokenPath is the entry point (potentially a main file, if C++ templates are used)
 # sources is an array of all of the paths we are actually interested in.
 # If compres sis true, each token will be reduced to a single character. Good for edit distance!
+
+
 def mted(tokenPath, sources, compress):
     tok = tokenizer.Tokenizer(tokenPath)
     functions = tok.split_functions(False)
-    
+
     # sort them appropriately
-    def comp(a,b):
+    def comp(a, b):
         lena = len(a[1])
         lenb = len(b[1])
         if lena == lenb:
@@ -32,9 +36,9 @@ def mted(tokenPath, sources, compress):
                 return 1
         else:
             return lena - lenb
-            
+
     functions.sort(comp)
-    
+
     # compress and output
     results = ""
     for funct in functions:
@@ -46,6 +50,6 @@ def mted(tokenPath, sources, compress):
 
         if compress == False:
             results += " "
-    
+
     # return results
     return results.strip()

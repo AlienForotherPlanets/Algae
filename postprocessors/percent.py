@@ -10,147 +10,157 @@
 # - groupPairs (bool) - Cluster together connected components of pairs
 
 import helpers.common as common
-import helpers.io as io
+import helpers.IO as IO
 from multiprocessing import Process
 from guassian import getMean, getDeviation
 import math
 import gc
 
 # creates clusters from the filtered data
+
+
 def createClusters(data, filename, assignName, allowPartners, helpers):
-	clusters = []
+    clusters = []
 
-	for element in data:
-		cluster = common.Cluster(allowPartners, filename, element.score)
+    for element in data:
+        cluster = common.Cluster(allowPartners, filename, element.score)
 
-		member1 = common.Member(element.pair[0], assignName, helpers)
-		member2 = common.Member(element.pair[1], assignName, helpers)
+        member1 = common.Member(element.pair[0], assignName, helpers)
+        member2 = common.Member(element.pair[1], assignName, helpers)
 
-		cluster.add(member1)
-		cluster.add(member2)
+        cluster.add(member1)
+        cluster.add(member2)
 
-		clusters.append(cluster)
+        clusters.append(cluster)
 
-	return clusters
+    return clusters
+
 
 def sortFun(a, b):
-	if a.score < b.score:
-		return -1
-	return 1
+    if a.score < b.score:
+        return -1
+    return 1
 
 # runs an entry in parellel
+
+
 def runEntry(filename, students, helpers, assignment, args, allowPartners):
-	# get the data
-	assignName = assignment.name
-	sourceSuffix = args["sourceSuffix"]
-	resultsSuffix = args["resultsSuffix"]
-	percent = float(args["percent"]) / 100.0
-	top = args["top"]
+    # get the data
+    assignName = assignment.name
+    sourceSuffix = args["sourceSuffix"]
+    resultsSuffix = args["resultsSuffix"]
+    percent = float(args["percent"]) / 100.0
+    top = args["top"]
 
-	safeFilename = common.makeFilenameSafe(filename) + sourceSuffix
-	filepath = helpers.getProcessedPath(assignName, safeFilename)
+    safeFilename = common.makeFilenameSafe(filename) + sourceSuffix
+    filepath = helpers.getProcessedPath(assignName, safeFilename)
 
-	if filepath != None:
-		rawData = common.PairResults(assignName, safeFilename, helpers)
-		data = []
+    if filepath != None:
+        rawData = common.PairResults(assignName, safeFilename, helpers)
+        data = []
 
-		# convert into python objects
-		i = 0
-		for pair in rawData.iterate():
-			data.append(pair)
+        # convert into python objects
+        i = 0
+        for pair in rawData.iterate():
+            data.append(pair)
 
-			i += 1
-			if i % 100000 == 0:
-				gc.collect()
+            i += 1
+            if i % 100000 == 0:
+                gc.collect()
 
-		# sort them
-		data.sort(sortFun)
+        # sort them
+        data.sort(sortFun)
 
-		# calculate and print stats
-		mean = getMean(data)
-		dev = getDeviation(data, mean)
-		helpers.printf("{}/{} mean: {}, std. devation: {}\n".format(assignName, filename, mean, dev))
+        # calculate and print stats
+        mean = getMean(data)
+        dev = getDeviation(data, mean)
+        helpers.printf(
+            "{}/{} mean: {}, std. devation: {}\n".format(assignName, filename, mean, dev))
 
-		# take to the top bottom percent
-		takeNum = math.floor(float(len(data)) * percent)
-		if "maxResults" in args:
-			takeNum = min(args["maxResults"], takeNum)
+        # take to the top bottom percent
+        takeNum = math.floor(float(len(data)) * percent)
+        if "maxResults" in args:
+            takeNum = min(args["maxResults"], takeNum)
 
-		if top:
-			data = data[::-1] # conveniently reverse
+        if top:
+            data = data[::-1]  # conveniently reverse
 
-		results = []
-		taken = 0
-		index = 0
-		while taken < takeNum:
-			current = data[index]
+        results = []
+        taken = 0
+        index = 0
+        while taken < takeNum:
+            current = data[index]
 
-			member1 = common.Member(current.pair[0], assignName, helpers)
-			member2 = common.Member(current.pair[1], assignName, helpers)
-			cluster = common.Cluster(allowPartners, filename, current.score)
-			cluster.add(member1)
-			cluster.add(member2)
+            member1 = common.Member(current.pair[0], assignName, helpers)
+            member2 = common.Member(current.pair[1], assignName, helpers)
+            cluster = common.Cluster(allowPartners, filename, current.score)
+            cluster.add(member1)
+            cluster.add(member2)
 
-			if cluster.hasCheating() == False:
-				# student are partners, ignore
-				index += 1
-				continue
+            if cluster.hasCheating() == False:
+                # student are partners, ignore
+                index += 1
+                continue
 
-			# take this entry
-			taken += 1
-			index += 1
-			results.append(current)
+            # take this entry
+            taken += 1
+            index += 1
+            results.append(current)
 
-			if index % 50000 == 0:
-				gc.collect()
+            if index % 50000 == 0:
+                gc.collect()
 
-		# create the clusters
-		clusters = createClusters(results, filename, assignName, allowPartners, helpers)
+        # create the clusters
+        clusters = createClusters(
+            results, filename, assignName, allowPartners, helpers)
 
-		# group pairs if necessary
-		if args.has_key("groupPairs") and args["groupPairs"] == True:
-			clusters = common.groupPairClusters(clusters, top)
+        # group pairs if necessary
+        if args.has_key("groupPairs") and args["groupPairs"] == True:
+            clusters = common.groupPairClusters(clusters, top)
 
-		# free up RAM
-		gc.collect()
+        # free up RAM
+        gc.collect()
 
-		# flush to disk
-		common.clustersToStandardJSON(clusters, assignName, common.makeFilenameSafe(filename) + resultsSuffix, helpers)
+        # flush to disk
+        common.clustersToStandardJSON(clusters, assignName, common.makeFilenameSafe(
+            filename) + resultsSuffix, helpers)
 
-		# all done!
-		helpers.printf("Finished '{}/{}', with {} results!\n".format(assignName, filename, len(clusters)))
+        # all done!
+        helpers.printf(
+            "Finished '{}/{}', with {} results!\n".format(assignName, filename, len(clusters)))
 
 
 # the main function
 def run(students, assignments, args, helpers):
-	# threads to join later
-	threads = []
+    # threads to join later
+    threads = []
 
-	# for each assignment
-	for assignment in assignments:
-		# for each entry
-		assignName = assignment.name
-		allowPartners = assignment.args["allowPartners"]
+    # for each assignment
+    for assignment in assignments:
+        # for each entry
+        assignName = assignment.name
+        allowPartners = assignment.args["allowPartners"]
 
-		# print progress
-		helpers.printf("postprocessing '{}' in serial...\n".format(assignName))
+        # print progress
+        helpers.printf("postprocessing '{}' in serial...\n".format(assignName))
 
-		# allow entry lists and file lists
-		entries = []
-		if assignment.args.has_key("entries"):
-			entries = assignment.args["entries"]
-		else:
-			if assignment.args.has_key("files"):
-				entries = assignment.args["files"]
+        # allow entry lists and file lists
+        entries = []
+        if assignment.args.has_key("entries"):
+            entries = assignment.args["entries"]
+        else:
+            if assignment.args.has_key("files"):
+                entries = assignment.args["files"]
 
-		for entry in entries:
-			# use the first source as the filename in case fo an entry
-			filename = entry
-			if assignment.args.has_key("entries"):
-				filename = entry["sources"][0]
+        for entry in entries:
+            # use the first source as the filename in case fo an entry
+            filename = entry
+            if assignment.args.has_key("entries"):
+                filename = entry["sources"][0]
 
-			# run the entry
-			runEntry(filename, students, helpers, assignment, args, allowPartners)
+            # run the entry
+            runEntry(filename, students, helpers,
+                     assignment, args, allowPartners)
 
-	# all done
-	return True
+    # all done
+    return True
